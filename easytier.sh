@@ -232,6 +232,12 @@ service_action() {
     install)
       require_root
       [ -r "$CONFIG_FILE" ] || die "请先执行 easytier configure 生成配置。"
+      if service_is_running; then
+        "$CLI_BIN" service --name "$SERVICE_NAME" stop
+        "$CLI_BIN" service --name "$SERVICE_NAME" start
+        ok "服务已存在，已重启并应用当前配置。"
+        return 0
+      fi
       "$CLI_BIN" service --name "$SERVICE_NAME" install \
         --display-name "$SERVICE_DISPLAY_NAME" \
         --service-work-dir "$INSTALL_DIR" \
@@ -542,7 +548,11 @@ configure_network() {
 
   write_config "$role" "$host" "$network" "$secret" "$address_mode" "$ipv4" "$peers" "$proxies" "$exits"
   info "脚本不会修改防火墙。请自行放行 TCP/UDP 11010 和云安全组。"
-  info "下一步：easytier service install"
+  if service_is_running; then
+    info "下一步：easytier service restart（应用新配置）"
+  else
+    info "下一步：easytier service install"
+  fi
 }
 
 redacted_config() {

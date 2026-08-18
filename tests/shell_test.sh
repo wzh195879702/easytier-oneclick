@@ -194,7 +194,13 @@ write_mock_cli() {
 #!/usr/bin/env bash
 printf '%s\n' "\$*" >>"$TEST_ROOT/cli-calls.log"
 case "\$*" in
-  *status*) printf 'Service is running\n' ;;
+  *status*)
+    if [ "$behavior" = "not-installed" ]; then
+      printf 'Service is not installed\n'
+    else
+      printf 'Service is running\n'
+    fi
+    ;;
   *start*) [ "$behavior" = "fail-start" ] && exit 1 || exit 0 ;;
   *) exit 0 ;;
 esac
@@ -205,12 +211,28 @@ EOF
 test_service_contract() {
   mkdir -p "$INSTALL_DIR"
   : >"$TEST_ROOT/cli-calls.log"
-  write_mock_cli "$CLI_BIN" normal
+  write_mock_cli "$CLI_BIN" not-installed
   [ -f "$CONFIG_FILE" ] || write_config first node net secret dhcp '' '' '' '' >/dev/null
   service_action install >/dev/null
   grep -F "service --name easytier-oneclick install --display-name EasyTier --service-work-dir $INSTALL_DIR -- -c $CONFIG_FILE" "$TEST_ROOT/cli-calls.log" >/dev/null || fail "service install arguments drifted"
   grep -F 'service --name easytier-oneclick start' "$TEST_ROOT/cli-calls.log" >/dev/null || fail "service was not started after registration"
   pass "service registration delegates to official CLI and starts the service"
+}
+
+test_service_install_is_idempotent() {
+  mkdir -p "$INSTALL_DIR"
+  : >"$TEST_ROOT/cli-calls.log"
+  write_mock_cli "$CLI_BIN" normal
+  [ -f "$CONFIG_FILE" ] || write_config first node net secret dhcp '' '' '' '' >/dev/null
+  service_action install >/dev/null
+  grep -F "service --name $SERVICE_NAME stop" "$TEST_ROOT/cli-calls.log" >/dev/null ||
+    fail "running service was not stopped before applying configuration"
+  grep -F "service --name $SERVICE_NAME start" "$TEST_ROOT/cli-calls.log" >/dev/null ||
+    fail "running service was not restarted after applying configuration"
+  if grep -F "service --name $SERVICE_NAME install" "$TEST_ROOT/cli-calls.log" >/dev/null; then
+    fail "running service was registered again"
+  fi
+  pass "service install restarts an already running service"
 }
 
 test_update_rollback() {
@@ -255,6 +277,7 @@ test_awk_regex_portability
 test_non_ascii_interpolation_safety
 test_ci_artifact_contract
 test_service_contract
+test_service_install_is_idempotent
 test_update_rollback
 
 printf "1..%d\n" "$pass_count"
