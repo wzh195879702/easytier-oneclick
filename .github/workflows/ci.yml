@@ -23,6 +23,18 @@ jobs:
         run: bash tests/shell_test.sh
       - name: Verify upstream release assets
         run: bash tests/release_assets_test.sh
+      - name: Upload cross-platform scripts
+        uses: actions/upload-artifact@v4
+        with:
+          name: easytier-oneclick
+          path: |
+            README.md
+            install.sh
+            easytier.sh
+            install.ps1
+            easytier.ps1
+          if-no-files-found: error
+          retention-days: 30
 
   bash-macos:
     runs-on: macos-latest

@@ -153,6 +153,26 @@ test_awk_regex_portability() {
   pass "awk quote regex is portable across awk implementations"
 }
 
+test_non_ascii_interpolation_safety() {
+  grep -F 'info "下载 EasyTier ${version}：${asset}"' "$SCRIPT_DIR/easytier.sh" >/dev/null ||
+    fail "download message variables are not delimited before non-ASCII punctuation"
+  grep -F '${STATE_DIR}。' "$SCRIPT_DIR/easytier.sh" >/dev/null ||
+    fail "state directory variable is not delimited before non-ASCII punctuation"
+  grep -F '${command}。' "$SCRIPT_DIR/easytier.sh" >/dev/null ||
+    fail "command variable is not delimited before non-ASCII punctuation"
+  pass "variables next to non-ASCII punctuation are safely delimited"
+}
+
+test_ci_artifact_contract() {
+  local workflow="$SCRIPT_DIR/.github/workflows/ci.yml" file
+  grep -F 'uses: actions/upload-artifact@v4' "$workflow" >/dev/null ||
+    fail "CI does not upload an artifact"
+  for file in README.md install.sh easytier.sh install.ps1 easytier.ps1; do
+    grep -F "$file" "$workflow" >/dev/null || fail "CI artifact omits $file"
+  done
+  pass "CI uploads the cross-platform script artifact"
+}
+
 write_mock_cli() {
   local path="$1" behavior="$2"
   cat >"$path" <<EOF
@@ -216,6 +236,8 @@ test_atomic_write_and_redaction
 test_invalid_inputs
 test_help_and_firewall_boundary
 test_awk_regex_portability
+test_non_ascii_interpolation_safety
+test_ci_artifact_contract
 test_service_contract
 test_update_rollback
 

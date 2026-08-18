@@ -175,7 +175,7 @@ download_release() {
   require_command unzip
   mkdir -p "$extract"
   download_base="$(release_download_base)"
-  info "下载 EasyTier $version：$asset"
+  info "下载 EasyTier ${version}：${asset}"
   info "下载源：$download_base"
   curl -fL --retry 3 --connect-timeout 15 \
     "$download_base/$version/$asset" -o "$archive" || die "下载失败：$asset"
@@ -602,7 +602,7 @@ uninstall_all() {
     rm -rf -- "$STATE_DIR"
     ok "程序、配置和备份已删除。"
   else
-    ok "程序已删除，配置与备份保留在 $STATE_DIR。"
+    ok "程序已删除，配置与备份保留在 ${STATE_DIR}。"
   fi
 }
 
@@ -689,7 +689,7 @@ main() {
     peer|route|node) run_cli_view "$command" ;;
     edit-config) edit_config ;;
     uninstall) uninstall_all "${1:-}" ;;
-    *) die "未知命令：$command。执行 easytier help 查看帮助。" ;;
+    *) die "未知命令：${command}。执行 easytier help 查看帮助。" ;;
   esac
 }
 
