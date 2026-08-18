@@ -48,8 +48,8 @@ bootstrap_raw_base() {
     export EASYTIER_ONECLICK_RAW_BASE="$upstream"
     export EASYTIER_NO_GH_PROXY="$no_proxy"
     export EASYTIER_GH_PROXY="$proxy"
-    # shellcheck source=../install.sh
-    . "$SCRIPT_DIR/install.sh"
+    cd "$SCRIPT_DIR"
+    . ./install.sh
     printf "%s\n" "$RAW_BASE"
   )
 }
