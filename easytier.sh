@@ -380,6 +380,16 @@ validate_peer_uri() {
   [[ "$1" =~ ^(tcp|udp|ws|wss|wg|quic|ring|faketcp)://[^[:space:]]+$ ]]
 }
 
+normalize_peer_uri_input() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  if [[ "$value" =~ ^(tcp|udp|ws|wss|wg|quic|ring|faketcp):/*(.*)$ ]]; then
+    value="${BASH_REMATCH[1]}://${BASH_REMATCH[2]}"
+  fi
+  printf "%s\n" "$value"
+}
+
 emit_string_array() {
   local key="$1" values="$2" line first="yes"
   [ -n "$values" ] || return 0
@@ -512,7 +522,8 @@ configure_network() {
 
   if [ "$role" = "join" ]; then
     while true; do
-      value="$(prompt_default "自建 peer URI（留空结束）" "")"
+      value="$(prompt_default "自建 peer URI，例如 tcp://1.2.3.4:11010（留空结束）" "")"
+      value="$(normalize_peer_uri_input "$value")"
       [ -n "$value" ] || break
       append_line peers "$value"
     done

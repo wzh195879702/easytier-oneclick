@@ -102,6 +102,21 @@ test_join_requires_peer() {
   pass "join config rejects empty peer list"
 }
 
+test_peer_uri_input_normalization() {
+  local normalized
+  normalized="$(normalize_peer_uri_input '  tcp://101.43.54.17:11010  ')"
+  [ "$normalized" = 'tcp://101.43.54.17:11010' ] || fail "peer URI whitespace was not trimmed"
+  normalized="$(normalize_peer_uri_input 'tcp:101.43.54.17:11010')"
+  [ "$normalized" = 'tcp://101.43.54.17:11010' ] || fail "missing peer URI separators were not restored"
+  normalized="$(normalize_peer_uri_input 'tcp:/101.43.54.17:11010')"
+  [ "$normalized" = 'tcp://101.43.54.17:11010' ] || fail "partial peer URI separator was not normalized"
+  validate_peer_uri "$normalized" || fail "normalized peer URI is invalid"
+  normalized="$(normalize_peer_uri_input 'http:101.43.54.17:11010')"
+  [ "$normalized" = 'http:101.43.54.17:11010' ] || fail "unsupported peer scheme was rewritten"
+  if validate_peer_uri "$normalized"; then fail "unsupported peer scheme was accepted"; fi
+  pass "interactive peer URIs tolerate outer spaces and missing separators"
+}
+
 test_atomic_write_and_redaction() {
   local summary backup_count
   write_config first node net first-secret dhcp '' '' '' '' >/dev/null
@@ -232,6 +247,7 @@ test_bootstrap_download_routing
 test_first_node_config
 test_join_config
 test_join_requires_peer
+test_peer_uri_input_normalization
 test_atomic_write_and_redaction
 test_invalid_inputs
 test_help_and_firewall_boundary
