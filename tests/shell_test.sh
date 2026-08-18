@@ -112,6 +112,13 @@ test_help_and_firewall_boundary() {
   pass "help exposes common commands and implementation does not mutate firewall"
 }
 
+test_awk_regex_portability() {
+  if grep -F 'gsub(/\"/' "$SCRIPT_DIR/easytier.sh" "$SCRIPT_DIR/install.sh" >/dev/null; then
+    fail "awk quote regex contains a non-portable escape"
+  fi
+  pass "awk quote regex is portable across awk implementations"
+}
+
 write_mock_cli() {
   local path="$1" behavior="$2"
   cat >"$path" <<EOF
@@ -172,6 +179,7 @@ test_join_requires_peer
 test_atomic_write_and_redaction
 test_invalid_inputs
 test_help_and_firewall_boundary
+test_awk_regex_portability
 test_service_contract
 test_update_rollback
 

@@ -35,8 +35,8 @@ check_platform() {
     Linux)
       [ -r /etc/os-release ] || die "仅支持 Debian 或 Ubuntu Linux。"
       local distro like
-      distro="$(awk -F= '$1 == "ID" { gsub(/\"/, "", $2); print tolower($2) }' /etc/os-release)"
-      like="$(awk -F= '$1 == "ID_LIKE" { gsub(/\"/, "", $2); print tolower($2) }' /etc/os-release)"
+      distro="$(awk -F= '$1 == "ID" { gsub(/"/, "", $2); print tolower($2) }' /etc/os-release)"
+      like="$(awk -F= '$1 == "ID_LIKE" { gsub(/"/, "", $2); print tolower($2) }' /etc/os-release)"
       case " $distro $like " in
         *" debian "*|*" ubuntu "*) ;;
         *) die "仅支持 Debian 或 Ubuntu，当前发行版：${distro:-unknown}" ;;
