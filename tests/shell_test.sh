@@ -154,11 +154,11 @@ test_awk_regex_portability() {
 }
 
 test_non_ascii_interpolation_safety() {
-  grep -F 'info "下载 EasyTier ${version}：${asset}"' "$SCRIPT_DIR/easytier.sh" >/dev/null ||
+  grep -F "info \"下载 EasyTier \${version}：\${asset}\"" "$SCRIPT_DIR/easytier.sh" >/dev/null ||
     fail "download message variables are not delimited before non-ASCII punctuation"
-  grep -F '${STATE_DIR}。' "$SCRIPT_DIR/easytier.sh" >/dev/null ||
+  grep -F "\${STATE_DIR}。" "$SCRIPT_DIR/easytier.sh" >/dev/null ||
     fail "state directory variable is not delimited before non-ASCII punctuation"
-  grep -F '${command}。' "$SCRIPT_DIR/easytier.sh" >/dev/null ||
+  grep -F "\${command}。" "$SCRIPT_DIR/easytier.sh" >/dev/null ||
     fail "command variable is not delimited before non-ASCII punctuation"
   pass "variables next to non-ASCII punctuation are safely delimited"
 }
