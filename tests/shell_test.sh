@@ -43,15 +43,10 @@ test_release_download_routing() {
 
 bootstrap_raw_base() {
   local upstream="$1" no_proxy="$2" proxy="$3"
-  (
-    export EASYTIER_ONECLICK_SOURCE_ONLY=1
-    export EASYTIER_ONECLICK_RAW_BASE="$upstream"
-    export EASYTIER_NO_GH_PROXY="$no_proxy"
-    export EASYTIER_GH_PROXY="$proxy"
-    cd "$SCRIPT_DIR"
-    . ./install.sh
-    printf "%s\n" "$RAW_BASE"
-  )
+  EASYTIER_ONECLICK_RAW_BASE="$upstream" \
+    EASYTIER_NO_GH_PROXY="$no_proxy" \
+    EASYTIER_GH_PROXY="$proxy" \
+    bash "$SCRIPT_DIR/install.sh" --print-download-source
 }
 
 test_bootstrap_download_routing() {

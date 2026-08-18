@@ -37,6 +37,8 @@ usage() {
 选项：
   --local             从当前仓库安装管理脚本
   --version <version> 安装指定 EasyTier 版本，默认 latest
+  --print-download-source
+                      显示管理脚本下载源后退出
   -h, --help          显示帮助
 EOF
 }
@@ -70,6 +72,7 @@ parse_args() {
         [ "$#" -ge 2 ] || die "--version 缺少参数。"
         VERSION="$2"; shift
         ;;
+      --print-download-source) printf "%s\n" "$RAW_BASE"; exit 0 ;;
       -h|--help) usage; exit 0 ;;
       *) die "未知选项：$1" ;;
     esac
@@ -112,6 +115,4 @@ main() {
   printf "  sudo easytier service install\n"
 }
 
-if [ "${EASYTIER_ONECLICK_SOURCE_ONLY:-0}" != "1" ]; then
-  main "$@"
-fi
+main "$@"
