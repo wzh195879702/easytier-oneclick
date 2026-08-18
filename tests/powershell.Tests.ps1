@@ -1,4 +1,4 @@
-BeforeAll {
+﻿BeforeAll {
     $root = Join-Path $TestDrive 'runtime'
     $env:EASYTIER_ONECLICK_INSTALL_DIR = Join-Path $root 'install'
     $env:EASYTIER_ONECLICK_STATE_DIR = Join-Path $root 'state'

@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-APP_NAME="easytier-oneclick"
 SERVICE_NAME="easytier-oneclick"
 SERVICE_DISPLAY_NAME="EasyTier"
 UPSTREAM_REPO="${EASYTIER_UPSTREAM_REPO:-EasyTier/EasyTier}"
@@ -169,7 +168,9 @@ download_release() {
 
   core="$(find "$extract" -type f -name easytier-core -print -quit)"
   cli="$(find "$extract" -type f -name easytier-cli -print -quit)"
-  [ -n "$core" ] && [ -n "$cli" ] || die "发布包缺少 easytier-core 或 easytier-cli。"
+  if [ -z "$core" ] || [ -z "$cli" ]; then
+    die "发布包缺少 easytier-core 或 easytier-cli。"
+  fi
 
   mkdir -p "$destination/bin"
   cp "$core" "$destination/bin/easytier-core"
@@ -321,14 +322,14 @@ validate_scalar() {
   local name="$1" value="$2"
   [ -n "$value" ] || die "$name 不能为空。"
   case "$value" in
-    *[$'\001'-$'\037'$'\177']*) die "$name 不能包含控制字符。" ;;
+    *[[:cntrl:]]*) die "$name 不能包含控制字符。" ;;
   esac
 }
 
 toml_escape() {
   local value="$1"
   case "$value" in
-    *[$'\001'-$'\037'$'\177']*) die "配置值不能包含控制字符。" ;;
+    *[[:cntrl:]]*) die "配置值不能包含控制字符。" ;;
   esac
   value="${value//\\/\\\\}"
   value="${value//\"/\\\"}"
@@ -336,15 +337,16 @@ toml_escape() {
 }
 
 validate_ipv4() {
-  local value="$1" ip prefix octet old_ifs
+  local value="$1" ip prefix octet
+  local -a octets
   ip="${value%%/*}"
   if [ "$ip" != "$value" ]; then
     prefix="${value#*/}"
     [[ "$prefix" =~ ^[0-9]+$ ]] && [ "$prefix" -ge 0 ] && [ "$prefix" -le 32 ] || return 1
   fi
-  old_ifs="$IFS"; IFS='.'; set -- $ip; IFS="$old_ifs"
-  [ "$#" -eq 4 ] || return 1
-  for octet in "$@"; do
+  IFS='.' read -r -a octets <<< "$ip"
+  [ "${#octets[@]}" -eq 4 ] || return 1
+  for octet in "${octets[@]}"; do
     [[ "$octet" =~ ^[0-9]+$ ]] && [ "$octet" -ge 0 ] && [ "$octet" -le 255 ] || return 1
   done
 }

@@ -10,6 +10,7 @@ export EASYTIER_ONECLICK_COMMAND_PATH="$TEST_ROOT/bin/easytier"
 export EASYTIER_ONECLICK_ALLOW_NON_ROOT=1
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source-path=SCRIPTDIR
 # shellcheck source=../easytier.sh
 . "$SCRIPT_DIR/easytier.sh"
 
