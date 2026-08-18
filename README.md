@@ -11,6 +11,8 @@
 
 脚本直接使用 [EasyTier 官方 Release](https://github.com/EasyTier/EasyTier/releases) 中的 `easytier-core` 和 `easytier-cli`，不会修改或重新编译 EasyTier。
 
+Release 二进制默认通过 EasyTier 官方安装脚本同款的 `https://ghfast.top/` 加速下载。需要直连 GitHub 时设置 `EASYTIER_NO_GH_PROXY=1`；使用自定义代理前缀时设置 `EASYTIER_GH_PROXY`，使用完整自定义下载根地址时设置 `EASYTIER_UPSTREAM_DOWNLOAD`。
+
 ## 一键安装
 
 ### Debian / Ubuntu
@@ -42,6 +44,25 @@ sudo easytier install v2.6.4
 ```
 
 ```powershell
+easytier install v2.6.4
+```
+
+Linux/macOS 强制直连 GitHub：
+
+```bash
+sudo env EASYTIER_NO_GH_PROXY=1 easytier install v2.6.4
+```
+
+使用自定义 GitHub 代理：
+
+```bash
+sudo env EASYTIER_GH_PROXY='https://your-proxy.example/' easytier install v2.6.4
+```
+
+Windows PowerShell 使用相同环境变量：
+
+```powershell
+$env:EASYTIER_NO_GH_PROXY = '1'
 easytier install v2.6.4
 ```
 

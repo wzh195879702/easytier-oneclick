@@ -28,6 +28,19 @@ test_asset_names() {
   pass "release asset names"
 }
 
+test_release_download_routing() {
+  local base
+  base="$(EASYTIER_UPSTREAM_DOWNLOAD= EASYTIER_NO_GH_PROXY= EASYTIER_GH_PROXY= release_download_base)"
+  [ "$base" = "https://ghfast.top/https://github.com/EasyTier/EasyTier/releases/download" ] || fail "default GitHub proxy routing"
+  base="$(EASYTIER_UPSTREAM_DOWNLOAD= EASYTIER_NO_GH_PROXY=1 EASYTIER_GH_PROXY= release_download_base)"
+  [ "$base" = "https://github.com/EasyTier/EasyTier/releases/download" ] || fail "direct GitHub routing"
+  base="$(EASYTIER_UPSTREAM_DOWNLOAD= EASYTIER_NO_GH_PROXY= EASYTIER_GH_PROXY=https://proxy.example/base/ release_download_base)"
+  [ "$base" = "https://proxy.example/base/https://github.com/EasyTier/EasyTier/releases/download" ] || fail "custom GitHub proxy routing"
+  base="$(EASYTIER_UPSTREAM_DOWNLOAD=https://mirror.example/releases/download/ EASYTIER_NO_GH_PROXY= EASYTIER_GH_PROXY= release_download_base)"
+  [ "$base" = "https://mirror.example/releases/download" ] || fail "custom upstream download routing"
+  pass "release download routing supports proxy, direct and custom sources"
+}
+
 test_first_node_config() {
   local output required
   output="$(render_config first node-a net-a 's3cret' dhcp '' '' '' '')"
@@ -173,6 +186,7 @@ test_update_rollback() {
 }
 
 test_asset_names
+test_release_download_routing
 test_first_node_config
 test_join_config
 test_join_requires_peer

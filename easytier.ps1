@@ -16,7 +16,6 @@ $script:ServiceName = 'easytier-oneclick'
 $script:ServiceDisplayName = 'EasyTier'
 $script:UpstreamRepo = if ($env:EASYTIER_UPSTREAM_REPO) { $env:EASYTIER_UPSTREAM_REPO } else { 'EasyTier/EasyTier' }
 $script:UpstreamApi = if ($env:EASYTIER_UPSTREAM_API) { $env:EASYTIER_UPSTREAM_API } else { "https://api.github.com/repos/$($script:UpstreamRepo)" }
-$script:UpstreamDownload = if ($env:EASYTIER_UPSTREAM_DOWNLOAD) { $env:EASYTIER_UPSTREAM_DOWNLOAD } else { "https://github.com/$($script:UpstreamRepo)/releases/download" }
 
 $script:InstallDir = if ($env:EASYTIER_ONECLICK_INSTALL_DIR) { $env:EASYTIER_ONECLICK_INSTALL_DIR } else { Join-Path $env:ProgramFiles 'EasyTierOneClick' }
 $script:StateDir = if ($env:EASYTIER_ONECLICK_STATE_DIR) { $env:EASYTIER_ONECLICK_STATE_DIR } else { Join-Path $env:ProgramData 'EasyTierOneClick' }
@@ -84,6 +83,14 @@ function Get-NormalizedArchitecture([string]$Architecture = '') {
 function Get-ReleaseAssetName([string]$Version, [string]$Architecture = '') {
     $arch = Get-NormalizedArchitecture $Architecture
     return "easytier-windows-$arch-$Version.zip"
+}
+
+function Get-ReleaseDownloadBase {
+    $direct = "https://github.com/$($script:UpstreamRepo)/releases/download"
+    if ($env:EASYTIER_UPSTREAM_DOWNLOAD) { return $env:EASYTIER_UPSTREAM_DOWNLOAD.TrimEnd('/') }
+    if ($env:EASYTIER_NO_GH_PROXY -eq '1') { return $direct }
+    $proxy = if ($env:EASYTIER_GH_PROXY) { $env:EASYTIER_GH_PROXY } else { 'https://ghfast.top/' }
+    return "$($proxy.TrimEnd('/'))/$direct"
 }
 
 function Resolve-Version([string]$Requested = 'latest') {
@@ -176,8 +183,10 @@ function Install-Release([string]$Mode = 'install', [string]$Requested = 'latest
     $previous = Join-Path $tempDir 'previous'
     New-Item -ItemType Directory -Force -Path $tempDir, $extract, $previous | Out-Null
     try {
+        $downloadBase = Get-ReleaseDownloadBase
         Write-Info "下载 EasyTier $target：$asset"
-        Invoke-WebRequest -UseBasicParsing -Uri "$($script:UpstreamDownload)/$target/$asset" -OutFile $archive
+        Write-Info "下载源：$downloadBase"
+        Invoke-WebRequest -UseBasicParsing -Uri "$downloadBase/$target/$asset" -OutFile $archive
         Expand-Archive -LiteralPath $archive -DestinationPath $extract -Force
         $newCore = Get-ChildItem -LiteralPath $extract -Filter 'easytier-core.exe' -File -Recurse | Select-Object -First 1
         $newCli = Get-ChildItem -LiteralPath $extract -Filter 'easytier-cli.exe' -File -Recurse | Select-Object -First 1

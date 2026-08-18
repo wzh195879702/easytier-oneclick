@@ -16,6 +16,35 @@ Describe 'Release asset mapping' {
     }
 }
 
+Describe 'Release download routing' {
+    It 'supports the official default proxy, direct mode and custom sources' {
+        $savedUpstream = $env:EASYTIER_UPSTREAM_DOWNLOAD
+        $savedNoProxy = $env:EASYTIER_NO_GH_PROXY
+        $savedProxy = $env:EASYTIER_GH_PROXY
+        try {
+            $env:EASYTIER_UPSTREAM_DOWNLOAD = $null
+            $env:EASYTIER_NO_GH_PROXY = $null
+            $env:EASYTIER_GH_PROXY = $null
+            Get-ReleaseDownloadBase | Should -Be 'https://ghfast.top/https://github.com/EasyTier/EasyTier/releases/download'
+
+            $env:EASYTIER_NO_GH_PROXY = '1'
+            Get-ReleaseDownloadBase | Should -Be 'https://github.com/EasyTier/EasyTier/releases/download'
+
+            $env:EASYTIER_NO_GH_PROXY = $null
+            $env:EASYTIER_GH_PROXY = 'https://proxy.example/base/'
+            Get-ReleaseDownloadBase | Should -Be 'https://proxy.example/base/https://github.com/EasyTier/EasyTier/releases/download'
+
+            $env:EASYTIER_UPSTREAM_DOWNLOAD = 'https://mirror.example/releases/download/'
+            Get-ReleaseDownloadBase | Should -Be 'https://mirror.example/releases/download'
+        }
+        finally {
+            $env:EASYTIER_UPSTREAM_DOWNLOAD = $savedUpstream
+            $env:EASYTIER_NO_GH_PROXY = $savedNoProxy
+            $env:EASYTIER_GH_PROXY = $savedProxy
+        }
+    }
+}
+
 Describe 'TOML generation' {
     It 'creates a first node without a peer or public server' {
         $config = New-ConfigText -Role first -HostName node-a -NetworkName net-a -NetworkSecret secret -AddressMode dhcp

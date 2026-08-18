@@ -5,7 +5,6 @@ SERVICE_NAME="easytier-oneclick"
 SERVICE_DISPLAY_NAME="EasyTier"
 UPSTREAM_REPO="${EASYTIER_UPSTREAM_REPO:-EasyTier/EasyTier}"
 UPSTREAM_API="${EASYTIER_UPSTREAM_API:-https://api.github.com/repos/$UPSTREAM_REPO}"
-UPSTREAM_DOWNLOAD="${EASYTIER_UPSTREAM_DOWNLOAD:-https://github.com/$UPSTREAM_REPO/releases/download}"
 
 INSTALL_DIR="${EASYTIER_ONECLICK_INSTALL_DIR:-/opt/easytier-oneclick}"
 STATE_DIR="${EASYTIER_ONECLICK_STATE_DIR:-/etc/easytier-oneclick}"
@@ -131,6 +130,21 @@ asset_name_for() {
   printf "easytier-%s-%s-%s.zip\n" "$os" "$arch" "$version"
 }
 
+release_download_base() {
+  local direct="https://github.com/$UPSTREAM_REPO/releases/download"
+  local proxy
+  if [ -n "${EASYTIER_UPSTREAM_DOWNLOAD:-}" ]; then
+    printf "%s\n" "${EASYTIER_UPSTREAM_DOWNLOAD%/}"
+    return 0
+  fi
+  if [ "${EASYTIER_NO_GH_PROXY:-0}" = "1" ]; then
+    printf "%s\n" "$direct"
+    return 0
+  fi
+  proxy="${EASYTIER_GH_PROXY:-https://ghfast.top/}"
+  printf "%s/%s\n" "${proxy%/}" "$direct"
+}
+
 resolve_version() {
   local requested="${1:-latest}"
   local version response
@@ -150,7 +164,7 @@ resolve_version() {
 
 download_release() {
   local version="$1" destination="$2"
-  local os arch asset archive extract core cli
+  local os arch asset archive extract core cli download_base
   os="$(detect_os)"
   arch="$(detect_arch "$os")"
   asset="$(asset_name_for "$os" "$arch" "$version")"
@@ -160,9 +174,11 @@ download_release() {
   require_command curl
   require_command unzip
   mkdir -p "$extract"
+  download_base="$(release_download_base)"
   info "下载 EasyTier $version：$asset"
+  info "下载源：$download_base"
   curl -fL --retry 3 --connect-timeout 15 \
-    "$UPSTREAM_DOWNLOAD/$version/$asset" -o "$archive" || die "下载失败：$asset"
+    "$download_base/$version/$asset" -o "$archive" || die "下载失败：$asset"
   unzip -tq "$archive" >/dev/null || die "下载文件不是有效 ZIP：$asset"
   unzip -q "$archive" -d "$extract"
 
