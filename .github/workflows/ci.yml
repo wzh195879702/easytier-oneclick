@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  bash-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Bash syntax
+        run: bash -n install.sh easytier.sh tests/shell_test.sh
+      - name: ShellCheck
+        run: shellcheck install.sh easytier.sh tests/shell_test.sh
+      - name: Contract tests
+        run: bash tests/shell_test.sh
+      - name: Verify upstream release assets
+        run: bash tests/release_assets_test.sh
+
+  bash-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bash syntax
+        run: bash -n install.sh easytier.sh tests/shell_test.sh
+      - name: Contract tests
+        run: bash tests/shell_test.sh
+
+  powershell-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install test modules
+        shell: powershell
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.5.0 -Scope CurrentUser -Force
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force
+      - name: Parse scripts
+        shell: powershell
+        run: |
+          $failed = $false
+          foreach ($file in 'install.ps1', 'easytier.ps1', 'tests/powershell.Tests.ps1') {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $file), [ref]$tokens, [ref]$errors
+            ) | Out-Null
+            if ($errors) {
+              $errors | Format-List | Out-String | Write-Error
+              $failed = $true
+            }
+          }
+          if ($failed) { throw 'PowerShell parser errors found.' }
+      - name: PSScriptAnalyzer
+        shell: powershell
+        run: |
+          $issues = Invoke-ScriptAnalyzer -Path install.ps1,easytier.ps1 -Severity Error
+          if ($issues) {
+            $issues | Format-Table -AutoSize | Out-String | Write-Error
+            throw 'PSScriptAnalyzer errors found.'
+          }
+      - name: Pester
+        shell: powershell
+        run: Invoke-Pester tests/powershell.Tests.ps1 -CI
