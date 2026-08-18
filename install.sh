@@ -3,7 +3,23 @@ set -Eeuo pipefail
 
 REPO="${EASYTIER_ONECLICK_REPO:-wzh195879702/easytier-oneclick}"
 BRANCH="${EASYTIER_ONECLICK_BRANCH:-main}"
-RAW_BASE="${EASYTIER_ONECLICK_RAW_BASE:-https://raw.githubusercontent.com/$REPO/$BRANCH}"
+
+resolve_raw_base() {
+  local direct="https://raw.githubusercontent.com/$REPO/$BRANCH"
+  local proxy
+  if [ -n "${EASYTIER_ONECLICK_RAW_BASE:-}" ]; then
+    printf "%s\n" "${EASYTIER_ONECLICK_RAW_BASE%/}"
+    return 0
+  fi
+  if [ "${EASYTIER_NO_GH_PROXY:-0}" = "1" ]; then
+    printf "%s\n" "$direct"
+    return 0
+  fi
+  proxy="${EASYTIER_GH_PROXY:-https://ghfast.top/}"
+  printf "%s/%s\n" "${proxy%/}" "$direct"
+}
+
+RAW_BASE="$(resolve_raw_base)"
 INSTALL_DIR="${EASYTIER_ONECLICK_INSTALL_DIR:-/opt/easytier-oneclick}"
 COMMAND_PATH="${EASYTIER_ONECLICK_COMMAND_PATH:-/usr/local/bin/easytier}"
 VERSION="latest"
@@ -96,4 +112,6 @@ main() {
   printf "  sudo easytier service install\n"
 }
 
-main "$@"
+if [ "${EASYTIER_ONECLICK_SOURCE_ONLY:-0}" != "1" ]; then
+  main "$@"
+fi

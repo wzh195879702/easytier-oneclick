@@ -139,4 +139,11 @@ Describe 'Safety boundary' {
         $help | Should -Match 'service install'
         $help | Should -Match '不修改防火墙'
     }
+
+    It 'accelerates bootstrap downloads while preserving overrides' {
+        $content = Get-Content -LiteralPath (Join-Path $PSScriptRoot '..\install.ps1') -Raw
+        $content | Should -Match 'https://ghfast\.top/'
+        $content | Should -Match 'EASYTIER_NO_GH_PROXY'
+        $content | Should -Match 'EASYTIER_ONECLICK_RAW_BASE'
+    }
 }

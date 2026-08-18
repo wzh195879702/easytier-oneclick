@@ -10,7 +10,17 @@ $ProgressPreference = 'SilentlyContinue'
 
 $repo = if ($env:EASYTIER_ONECLICK_REPO) { $env:EASYTIER_ONECLICK_REPO } else { 'wzh195879702/easytier-oneclick' }
 $branch = if ($env:EASYTIER_ONECLICK_BRANCH) { $env:EASYTIER_ONECLICK_BRANCH } else { 'main' }
-$rawBase = if ($env:EASYTIER_ONECLICK_RAW_BASE) { $env:EASYTIER_ONECLICK_RAW_BASE } else { "https://raw.githubusercontent.com/$repo/$branch" }
+$directRawBase = "https://raw.githubusercontent.com/$repo/$branch"
+$rawBase = if ($env:EASYTIER_ONECLICK_RAW_BASE) {
+    $env:EASYTIER_ONECLICK_RAW_BASE.TrimEnd('/')
+}
+elseif ($env:EASYTIER_NO_GH_PROXY -eq '1') {
+    $directRawBase
+}
+else {
+    $proxy = if ($env:EASYTIER_GH_PROXY) { $env:EASYTIER_GH_PROXY } else { 'https://ghfast.top/' }
+    "$($proxy.TrimEnd('/'))/$directRawBase"
+}
 $installDir = if ($env:EASYTIER_ONECLICK_INSTALL_DIR) { $env:EASYTIER_ONECLICK_INSTALL_DIR } else { Join-Path $env:ProgramFiles 'EasyTierOneClick' }
 $managerPath = Join-Path $installDir 'easytier.ps1'
 $commandPath = Join-Path $installDir 'easytier.cmd'

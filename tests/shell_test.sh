@@ -30,15 +30,41 @@ test_asset_names() {
 
 test_release_download_routing() {
   local base
-  base="$(EASYTIER_UPSTREAM_DOWNLOAD= EASYTIER_NO_GH_PROXY= EASYTIER_GH_PROXY= release_download_base)"
+  base="$(EASYTIER_UPSTREAM_DOWNLOAD='' EASYTIER_NO_GH_PROXY='' EASYTIER_GH_PROXY='' release_download_base)"
   [ "$base" = "https://ghfast.top/https://github.com/EasyTier/EasyTier/releases/download" ] || fail "default GitHub proxy routing"
-  base="$(EASYTIER_UPSTREAM_DOWNLOAD= EASYTIER_NO_GH_PROXY=1 EASYTIER_GH_PROXY= release_download_base)"
+  base="$(EASYTIER_UPSTREAM_DOWNLOAD='' EASYTIER_NO_GH_PROXY=1 EASYTIER_GH_PROXY='' release_download_base)"
   [ "$base" = "https://github.com/EasyTier/EasyTier/releases/download" ] || fail "direct GitHub routing"
-  base="$(EASYTIER_UPSTREAM_DOWNLOAD= EASYTIER_NO_GH_PROXY= EASYTIER_GH_PROXY=https://proxy.example/base/ release_download_base)"
+  base="$(EASYTIER_UPSTREAM_DOWNLOAD='' EASYTIER_NO_GH_PROXY='' EASYTIER_GH_PROXY=https://proxy.example/base/ release_download_base)"
   [ "$base" = "https://proxy.example/base/https://github.com/EasyTier/EasyTier/releases/download" ] || fail "custom GitHub proxy routing"
-  base="$(EASYTIER_UPSTREAM_DOWNLOAD=https://mirror.example/releases/download/ EASYTIER_NO_GH_PROXY= EASYTIER_GH_PROXY= release_download_base)"
+  base="$(EASYTIER_UPSTREAM_DOWNLOAD=https://mirror.example/releases/download/ EASYTIER_NO_GH_PROXY='' EASYTIER_GH_PROXY='' release_download_base)"
   [ "$base" = "https://mirror.example/releases/download" ] || fail "custom upstream download routing"
   pass "release download routing supports proxy, direct and custom sources"
+}
+
+bootstrap_raw_base() {
+  local upstream="$1" no_proxy="$2" proxy="$3"
+  (
+    export EASYTIER_ONECLICK_SOURCE_ONLY=1
+    export EASYTIER_ONECLICK_RAW_BASE="$upstream"
+    export EASYTIER_NO_GH_PROXY="$no_proxy"
+    export EASYTIER_GH_PROXY="$proxy"
+    # shellcheck source=../install.sh
+    . "$SCRIPT_DIR/install.sh"
+    printf "%s\n" "$RAW_BASE"
+  )
+}
+
+test_bootstrap_download_routing() {
+  local base
+  base="$(bootstrap_raw_base '' '' '')"
+  [ "$base" = "https://ghfast.top/https://raw.githubusercontent.com/wzh195879702/easytier-oneclick/main" ] || fail "default bootstrap proxy routing"
+  base="$(bootstrap_raw_base '' 1 '')"
+  [ "$base" = "https://raw.githubusercontent.com/wzh195879702/easytier-oneclick/main" ] || fail "direct bootstrap routing"
+  base="$(bootstrap_raw_base '' '' 'https://proxy.example/base/')"
+  [ "$base" = "https://proxy.example/base/https://raw.githubusercontent.com/wzh195879702/easytier-oneclick/main" ] || fail "custom bootstrap proxy routing"
+  base="$(bootstrap_raw_base 'https://mirror.example/project/' '' '')"
+  [ "$base" = "https://mirror.example/project" ] || fail "custom bootstrap raw routing"
+  pass "bootstrap downloads support proxy, direct and custom sources"
 }
 
 test_first_node_config() {
@@ -187,6 +213,7 @@ test_update_rollback() {
 
 test_asset_names
 test_release_download_routing
+test_bootstrap_download_routing
 test_first_node_config
 test_join_config
 test_join_requires_peer

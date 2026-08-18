@@ -18,14 +18,14 @@ Release 二进制默认通过 EasyTier 官方安装脚本同款的 `https://ghfa
 ### Debian / Ubuntu
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/wzh195879702/easytier-oneclick/main/install.sh \
+curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/wzh195879702/easytier-oneclick/main/install.sh \
   | sudo bash
 ```
 
 ### macOS
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/wzh195879702/easytier-oneclick/main/install.sh \
+curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/wzh195879702/easytier-oneclick/main/install.sh \
   | sudo bash
 ```
 
@@ -34,7 +34,7 @@ curl -fsSL https://raw.githubusercontent.com/wzh195879702/easytier-oneclick/main
 使用“以管理员身份运行”的 Windows PowerShell：
 
 ```powershell
-irm https://raw.githubusercontent.com/wzh195879702/easytier-oneclick/main/install.ps1 | iex
+irm https://ghfast.top/https://raw.githubusercontent.com/wzh195879702/easytier-oneclick/main/install.ps1 | iex
 ```
 
 安装指定版本：
