@@ -62,7 +62,9 @@ jobs:
       - name: PSScriptAnalyzer
         shell: powershell
         run: |
-          $issues = Invoke-ScriptAnalyzer -Path install.ps1,easytier.ps1 -Severity Error
+          $issues = foreach ($file in 'install.ps1', 'easytier.ps1') {
+            Invoke-ScriptAnalyzer -Path $file -Severity Error
+          }
           if ($issues) {
             $issues | Format-Table -AutoSize | Out-String | Write-Error
             throw 'PSScriptAnalyzer errors found.'
